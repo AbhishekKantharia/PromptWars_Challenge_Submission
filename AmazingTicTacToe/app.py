@@ -4,7 +4,7 @@ import json
 import subprocess
 import os
 
-PORT = 8000
+PORT = int(os.environ.get('PORT', 8000))
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -21,11 +21,12 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(b"Invalid JSON")
                 return
 
-            # Execute the command using cmd prompt instead of PowerShell
+            # Execute the command across platforms
             try:
-                # Use cmd.exe /c to run any command
+                # Use cmd.exe /c on Windows or sh -c on Linux
+                cmd_args = ['cmd.exe', '/c', command] if os.name == 'nt' else ['sh', '-c', command]
                 result = subprocess.run(
-                    ['cmd.exe', '/c', command],
+                    cmd_args,
                     capture_output=True,
                     text=True,
                     cwd=os.getcwd()
