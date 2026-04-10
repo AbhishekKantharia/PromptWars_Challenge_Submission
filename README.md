@@ -6,15 +6,15 @@ Smart Venue Experience System (SVES) is an AI-powered, real-time crowd managemen
 
 The system integrates live CCTV-based crowd detection, congestion-aware navigation using graph algorithms, and predictive analytics for queue optimization—delivering a seamless, data-driven event experience.
 
-##🚀 Short & Impactful (Top of Repo)
+## 🚀 Short & Impactful (Top of Repo)
 
 AI-powered platform for real-time crowd management in large venues using YOLOv8, Kafka, and smart routing algorithms to reduce congestion and waiting times.
 
-##🧠 Technical Version (For Developers)
+## 🧠 Technical Version (For Developers)
 
 A full-stack, microservices-based system built with React, Node.js, FastAPI, Kafka, and PostgreSQL that enables real-time crowd monitoring and intelligent navigation inside large venues.
 
-Features include:
+### Features include:
 
 YOLOv8-based crowd detection from CCTV feeds
 Kafka-powered real-time data streaming
@@ -23,7 +23,7 @@ ML-driven queue time prediction
 Mapbox-powered interactive venue visualization
 Docker & Kubernetes deployment support
 
-##💡 Clean + Professional (Balanced)
+## 💡 Clean + Professional (Balanced)
 
 Smart Venue Experience System (SVES) is a scalable, real-time platform that enhances physical event experiences by optimizing crowd flow, minimizing wait times, and enabling intelligent decision-making.
 
