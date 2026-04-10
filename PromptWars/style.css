@@ -1,0 +1,178 @@
+:root {
+    --bg-color: #f3f6f8;
+    --grid-line: rgba(0, 0, 0, 0.04);
+    --border-color: #cbd5e1;
+    --primary-color: #0ea5e9;
+    --fuchsia: #d946ef;
+    --emerald: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --violet: #8b5cf6;
+    --text-color: #1e293b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Orbitron', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    background-image: 
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+}
+
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+header {
+    text-align: center;
+    width: 100%;
+}
+
+h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--text-color);
+    text-shadow: 2px 2px 0px white, 4px 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+
+.hud {
+    display: flex;
+    justify-content: space-around;
+    width: 600px;
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.score-container {
+    font-weight: bold;
+}
+
+.score-container span {
+    color: var(--emerald);
+}
+
+.effect-display {
+    margin-top: 15px;
+    font-size: 1.2rem;
+    padding: 8px 15px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.effect-display.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.effect-normal { border: 2px solid var(--primary-color); color: var(--primary-color); }
+.effect-confusion { border: 2px solid var(--violet); color: var(--violet); animation: shake 0.5s infinite; }
+.effect-hyper { border: 2px solid var(--yellow); color: var(--yellow); }
+.effect-gluttony { border: 2px solid var(--red); color: var(--red); }
+
+.canvas-container {
+    position: relative;
+    width: 600px;
+    height: 600px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 4px solid white;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+}
+
+.overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#overlay-title {
+    font-size: 2.5rem;
+    color: var(--red);
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+#overlay-desc {
+    color: #475569;
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    text-align: center;
+    max-width: 80%;
+    font-weight: bold;
+}
+
+button {
+    background: #ffffff;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.2);
+}
+
+button:hover {
+    background: var(--primary-color);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(14, 165, 233, 0.4);
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-2deg); }
+    50% { transform: translateX(2px) rotate(2deg); }
+    75% { transform: translateX(-2px) rotate(-2deg); }
+    100% { transform: translateX(0); }
+}
