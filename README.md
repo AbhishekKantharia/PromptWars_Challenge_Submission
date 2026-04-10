@@ -1,6 +1,6 @@
 # PromptWars_Challenge_1_Submission
 
-##🏆 🔥 Best (Recruiter / Hackathon Winning)
+## 🏆 🔥 Best (Recruiter / Hackathon Winning)
 
 Smart Venue Experience System (SVES) is an AI-powered, real-time crowd management platform designed for large-scale sporting venues and events. It leverages computer vision (YOLOv8), streaming pipelines (Kafka), and intelligent routing algorithms to optimize crowd movement, reduce wait times, and enhance attendee experience.
 
