@@ -1,13 +1,35 @@
-__pycache__
+# Development artefacts — never ship these in the container image
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Virtual environments
 env/
 venv/
 .env
 .venv/
+
+# Version control
 .git/
 .gitignore
+
+# Docker build files themselves
 Dockerfile
 .dockerignore
+
+# Test files — not needed at runtime
+test_app.py
+.pytest_cache/
+pytest.ini
+setup.cfg
+
+# IDE / editor configs
+.vscode/
+.idea/
+*.code-workspace
+
+# OS artefacts
+.DS_Store
+Thumbs.db

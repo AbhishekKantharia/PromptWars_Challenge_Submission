@@ -1,65 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- ===== Meta & SEO ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Tic-Tac-Toe</title>
+    <meta name="description" content="Quantum Tic-Tac-Toe — An immersive, chaos-driven evolution of the classic game with an embedded secure terminal emulator, deployed on Google Cloud Run.">
+    <meta name="theme-color" content="#0b0c10">
+    <meta property="og:title" content="Quantum Tic-Tac-Toe">
+    <meta property="og:description" content="Expect the Unexpected. Play Quantum Tic-Tac-Toe, powered by Google Cloud.">
+    <meta property="og:type" content="website">
+    <title>Quantum Tic-Tac-Toe — Expect the Unexpected</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Google tag (gtag.js) — Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLACEHOLDER123"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-PLACEHOLDER123', { anonymize_ip: true });
+
+        // Custom event tracking helper
+        function trackEvent(action, category, label) {
+            gtag('event', action, { event_category: category, event_label: label });
+        }
+    </script>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div class="app-container">
-        <!-- Main Game Section -->
-        <main class="game-section">
+    <!-- Skip Navigation (Accessibility: keyboard users jump to main content) -->
+    <a href="#main-game" class="skip-link">Skip to main content</a>
+
+    <div class="app-container" role="application" aria-label="Quantum Tic-Tac-Toe Application">
+
+        <!-- ===== MAIN GAME SECTION ===== -->
+        <main id="main-game" class="game-section" aria-label="Tic-Tac-Toe game">
             <header class="game-header">
-                <h1 class="glow-text">QUANTUM TIC-TAC-TOE</h1>
-                <p class="subtitle">Expect the Unexpected.</p>
-                <div class="status-panel">
+                <h1 class="glow-text" id="game-title">QUANTUM TIC-TAC-TOE</h1>
+                <p class="subtitle" aria-label="Game tagline">Expect the Unexpected.</p>
+
+                <!-- Live region: game status announced to screen readers -->
+                <div class="status-panel" role="status" aria-live="polite" aria-atomic="true">
                     <div id="status">Player X's Turn</div>
                 </div>
             </header>
-            
+
+            <!-- Google Cloud Badge -->
+            <aside class="cloud-badge" aria-label="Powered by Google Cloud">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="#4285F4"/>
+                    <path d="M7 12a5 5 0 0 1 5-5v2a3 3 0 0 0-3 3H7z" fill="#fff"/>
+                    <path d="M12 7a5 5 0 0 1 5 5h-2a3 3 0 0 0-3-3V7z" fill="#fff" opacity=".7"/>
+                </svg>
+                <span>Powered by Google Cloud Run</span>
+            </aside>
+
+            <!-- Score tracker -->
+            <section class="scoreboard" aria-label="Score tracker">
+                <div class="score-item" id="score-x-container">
+                    <span class="score-label x-color" aria-label="Player X score">Player X</span>
+                    <span class="score-value" id="score-x" aria-live="polite">0</span>
+                </div>
+                <div class="score-divider" aria-hidden="true">VS</div>
+                <div class="score-item" id="score-o-container">
+                    <span class="score-label o-color" aria-label="AI O score">AI (O)</span>
+                    <span class="score-value" id="score-o" aria-live="polite">0</span>
+                </div>
+            </section>
+
+            <!-- Game Board -->
             <div class="board-container">
-                <div id="board" class="board">
-                    <div class="cell" data-index="0"></div>
-                    <div class="cell" data-index="1"></div>
-                    <div class="cell" data-index="2"></div>
-                    <div class="cell" data-index="3"></div>
-                    <div class="cell" data-index="4"></div>
-                    <div class="cell" data-index="5"></div>
-                    <div class="cell" data-index="6"></div>
-                    <div class="cell" data-index="7"></div>
-                    <div class="cell" data-index="8"></div>
+                <div
+                    id="board"
+                    class="board"
+                    role="grid"
+                    aria-label="Tic-Tac-Toe board, 3 by 3"
+                    aria-describedby="board-instructions">
+
+                    <p id="board-instructions" class="sr-only">
+                        Use arrow keys to navigate between cells and Enter or Space to make your move.
+                        You are Player X. The AI plays as O.
+                    </p>
+
+                    <!-- Row 1 -->
+                    <div role="row">
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="0"
+                            tabindex="0"
+                            aria-label="Row 1, Column 1 — empty"
+                            id="cell-0"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="1"
+                            tabindex="-1"
+                            aria-label="Row 1, Column 2 — empty"
+                            id="cell-1"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="2"
+                            tabindex="-1"
+                            aria-label="Row 1, Column 3 — empty"
+                            id="cell-2"></button>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div role="row">
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="3"
+                            tabindex="-1"
+                            aria-label="Row 2, Column 1 — empty"
+                            id="cell-3"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="4"
+                            tabindex="-1"
+                            aria-label="Row 2, Column 2 — empty"
+                            id="cell-4"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="5"
+                            tabindex="-1"
+                            aria-label="Row 2, Column 3 — empty"
+                            id="cell-5"></button>
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div role="row">
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="6"
+                            tabindex="-1"
+                            aria-label="Row 3, Column 1 — empty"
+                            id="cell-6"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="7"
+                            tabindex="-1"
+                            aria-label="Row 3, Column 2 — empty"
+                            id="cell-7"></button>
+                        <button class="cell"
+                            role="gridcell"
+                            data-index="8"
+                            tabindex="-1"
+                            aria-label="Row 3, Column 3 — empty"
+                            id="cell-8"></button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="controls">
-                <button id="reset-btn" class="btn primary-btn">REBOOT SYSTEM</button>
-                <button id="toggle-terminal-btn" class="btn secondary-btn">CMD OVERRIDE</button>
-            </div>
-            
-            <div id="event-log" class="event-log">
-                <p>System initialized...</p>
-            </div>
+
+            <!-- Controls -->
+            <nav class="controls" aria-label="Game controls">
+                <button id="reset-btn" class="btn primary-btn" aria-label="Restart the game">
+                    ⟳ REBOOT SYSTEM
+                </button>
+                <button id="toggle-terminal-btn" class="btn secondary-btn"
+                    aria-expanded="false"
+                    aria-controls="terminal-section"
+                    aria-label="Toggle the terminal emulator panel">
+                    ⌥ CMD OVERRIDE
+                </button>
+            </nav>
+
+            <!-- Live event log  -->
+            <section class="event-log" aria-label="Game event log">
+                <p id="event-msg" role="log" aria-live="assertive" aria-atomic="true">
+                    System initialized...
+                </p>
+            </section>
         </main>
-        
-        <!-- Terminal Section -->
-        <aside id="terminal-section" class="terminal-section hidden">
+
+        <!-- ===== TERMINAL SECTION ===== -->
+        <aside
+            id="terminal-section"
+            class="terminal-section hidden"
+            role="complementary"
+            aria-label="Secure terminal emulator"
+            aria-hidden="true">
+
             <div class="terminal-header">
-                <h2>CMD // Command Prompt Emulator</h2>
-                <button id="close-terminal-btn" class="close-btn">&times;</button>
+                <h2 id="terminal-title">⚡ Secure Terminal — Sandbox Mode</h2>
+                <button
+                    id="close-terminal-btn"
+                    class="close-btn"
+                    aria-label="Close terminal panel">
+                    &times;
+                </button>
             </div>
-            <div class="terminal-body" id="terminal-output">
-                <div class="log-line system-msg">Microsoft Windows [Version 10.0]</div>
-                <div class="log-line system-msg">(c) Microsoft Corporation. All rights reserved.</div>
-                <div class="log-line system-msg">Connected to backend via CMD.EXE engine.</div>
+
+            <div
+                class="terminal-body"
+                id="terminal-output"
+                role="log"
+                aria-live="polite"
+                aria-labelledby="terminal-title">
+                <div class="log-line system-msg">Quantum Tic-Tac-Toe Secure Terminal v2.0</div>
+                <div class="log-line system-msg">Running on Google Cloud Run ☁️</div>
+                <div class="log-line system-msg">⚠  Only safe, allowlisted commands are permitted.</div>
+                <div class="log-line system-msg">Type <kbd>help</kbd> to see available commands.</div>
+                <div class="log-line system-msg">──────────────────────────────────────</div>
             </div>
-            <div class="terminal-input-container">
-                <span class="prompt">C:\&gt;</span>
-                <input type="text" id="terminal-input" autocomplete="off" spellcheck="false" autofocus>
+
+            <div class="terminal-input-container" role="group" aria-label="Terminal command input">
+                <label for="terminal-input" class="prompt" aria-label="Command prompt">
+                    <span aria-hidden="true">quantum@cloud:~$</span>
+                </label>
+                <input
+                    type="text"
+                    id="terminal-input"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-label="Enter a terminal command"
+                    aria-describedby="terminal-hint"
+                    placeholder="Type a command...">
             </div>
+            <p id="terminal-hint" class="sr-only">
+                Type a command and press Enter. Only safe, read-only commands are permitted.
+                Type help for the full list.
+            </p>
         </aside>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>

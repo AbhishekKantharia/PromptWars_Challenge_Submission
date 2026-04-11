@@ -1,0 +1,5 @@
+# Quantum Tic-Tac-Toe — Python dependencies
+# ─────────────────────────────────────────
+# google-cloud-logging: structured audit logging to Google Cloud
+# (falls back gracefully to stdout if not running on GCP)
+google-cloud-logging==3.10.0
