@@ -703,7 +703,233 @@ kbd {
     .btn { font-size: 0.75rem; padding: 0.6rem 1rem; }
 }
 
-/* Reduced motion — respect user preference */
+/* ============================================================
+  13. Leaderboard Section (Firebase Realtime Database)
+   ============================================================ */
+
+.leaderboard-btn {
+    background: transparent;
+    color: #FFA000;
+    border-color: #FFA000;
+}
+
+.leaderboard-btn:hover,
+.leaderboard-btn:focus-visible {
+    background: #FFA000;
+    color: var(--bg-color);
+    box-shadow: 0 0 20px #FFA000;
+}
+
+.leaderboard-btn[aria-expanded="true"] {
+    background: #FFA000;
+    color: var(--bg-color);
+}
+
+.leaderboard-section {
+    flex: 1;
+    min-width: 0;
+    background: rgba(10, 8, 5, 0.97);
+    border: 1px solid rgba(255, 160, 0, 0.3);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    box-shadow:
+        0 0 30px rgba(255, 160, 0, 0.1),
+        inset 0 0 20px rgba(255, 160, 0, 0.03);
+    overflow: hidden;
+    transition: flex var(--transition-slide),
+                opacity var(--transition-slide),
+                transform var(--transition-slide);
+    transform-origin: right center;
+    opacity: 1;
+}
+
+.leaderboard-section.hidden {
+    flex: 0 0 0;
+    width: 0;
+    opacity: 0;
+    transform: scaleX(0);
+    border-width: 0;
+    pointer-events: none;
+}
+
+.leaderboard-header {
+    background: #1a1200;
+    padding: var(--space-sm) var(--space-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 160, 0, 0.2);
+    flex-shrink: 0;
+    gap: var(--space-sm);
+}
+
+.leaderboard-header h2 {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: #FFA000;
+    font-weight: normal;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.leaderboard-subtitle {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: #555;
+    padding: var(--space-xs) var(--space-md);
+    border-bottom: 1px solid #1a1a1a;
+    flex-shrink: 0;
+}
+
+.leaderboard-subtitle strong {
+    color: #FFA000;
+}
+
+.leaderboard-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-md);
+    scrollbar-width: thin;
+    scrollbar-color: #3a2800 transparent;
+}
+
+.leaderboard-body::-webkit-scrollbar { width: 5px; }
+.leaderboard-body::-webkit-scrollbar-track { background: transparent; }
+.leaderboard-body::-webkit-scrollbar-thumb { background: #3a2800; border-radius: 3px; }
+
+.leaderboard-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-xl);
+    color: #555;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #1a1200;
+    border-top-color: #FFA000;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+.leaderboard-table th {
+    text-align: left;
+    padding: var(--space-xs) var(--space-sm);
+    color: #FFA000;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 160, 0, 0.2);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.leaderboard-table td {
+    padding: var(--space-xs) var(--space-sm);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+}
+
+.leaderboard-table tr:hover td {
+    background: rgba(255, 160, 0, 0.05);
+}
+
+.leaderboard-table tr.current-player td {
+    color: #FFA000;
+    font-weight: 600;
+    background: rgba(255, 160, 0, 0.08);
+}
+
+.leaderboard-empty {
+    text-align: center;
+    color: #555;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: var(--space-xl);
+    line-height: 1.6;
+}
+
+.leaderboard-footer {
+    padding: var(--space-xs) var(--space-md);
+    border-top: 1px solid #1a1200;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: #444;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* ============================================================
+  14. Firebase Status Indicator
+   ============================================================ */
+
+.firebase-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: var(--space-xs);
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background var(--transition-normal);
+}
+
+.status-dot.connecting    { background: var(--warning-color); animation: pulse 1s ease-in-out infinite; }
+.status-dot.connected     { background: var(--success-color); }
+.status-dot.disconnected  { background: var(--error-color); }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
+/* ============================================================
+  15. Cloud Badge extras
+   ============================================================ */
+
+.badge-sep {
+    color: #333;
+    font-size: 0.65rem;
+}
+
+/* ============================================================
+  16. Hidden utility
+   ============================================================ */
+
+.hidden {
+    display: none !important;
+}
+
+/* ============================================================
+  17. Reduced motion — respect user preference
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;

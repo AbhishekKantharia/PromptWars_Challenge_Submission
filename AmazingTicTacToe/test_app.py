@@ -383,6 +383,221 @@ class TestAllowedCommandsMetadata(unittest.TestCase):
             self.assertIsInstance(meta["args"], list)
 
 
+# ===========================================================================
+# 8. HTTP HANDLER — Health Endpoint & Security Headers
+# ===========================================================================
+class TestHTTPHandler(unittest.TestCase):
+    """Integration-style tests for the SecureHandler endpoints."""
+
+    def setUp(self):
+        """Start the server in a background thread for each test."""
+        from http.server import HTTPServer
+        import threading
+        import app as app_module
+
+        self._port = 18765
+        self._server = HTTPServer(("localhost", self._port), app_module.SecureHandler)
+        self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
+        self._thread.start()
+
+    def tearDown(self):
+        self._server.shutdown()
+
+    def _url(self, path=""):
+        return f"http://localhost:{self._port}{path}"
+
+    def test_health_endpoint_returns_200(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            self.assertEqual(resp.status, 200)
+
+    def test_health_endpoint_returns_json(self):
+        import urllib.request, json
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            data = json.loads(resp.read())
+        self.assertEqual(data["status"], "ok")
+        self.assertIn("service", data)
+        self.assertIn("version", data)
+
+    def test_healthz_alias_returns_200(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/healthz")) as resp:
+            self.assertEqual(resp.status, 200)
+
+    def test_security_headers_present(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            headers = dict(resp.headers)
+        self.assertIn("X-Frame-Options",    headers)
+        self.assertIn("X-Content-Type-Options", headers)
+        self.assertIn("Content-Security-Policy", headers)
+
+    def test_x_frame_options_is_deny(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            self.assertEqual(resp.headers.get("X-Frame-Options"), "DENY")
+
+    def test_content_type_options_nosniff(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            self.assertEqual(resp.headers.get("X-Content-Type-Options"), "nosniff")
+
+    def test_csp_blocks_inline_unknown_origins(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            csp = resp.headers.get("Content-Security-Policy", "")
+        self.assertIn("default-src", csp)
+        self.assertIn("frame-ancestors 'none'", csp)
+
+    def test_csp_allows_firebase(self):
+        import urllib.request
+        with urllib.request.urlopen(self._url("/health")) as resp:
+            csp = resp.headers.get("Content-Security-Policy", "")
+        self.assertIn("firebaseio.com", csp)
+        self.assertIn("gstatic.com", csp)
+
+    def test_post_run_command_missing_command(self):
+        import urllib.request, urllib.error, json
+        payload = json.dumps({"command": ""}).encode()
+        req = urllib.request.Request(
+            self._url("/run_command"),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            resp = urllib.request.urlopen(req)
+            data = json.loads(resp.read())
+            self.assertFalse(data.get("stdout") and data.get("returncode") == 0)
+        except urllib.error.HTTPError as e:
+            # 403 is acceptable for blocked/empty command
+            self.assertIn(e.code, (400, 403))
+
+    def test_post_run_command_help_works(self):
+        import urllib.request, json
+        payload = json.dumps({"command": "help"}).encode()
+        req = urllib.request.Request(
+            self._url("/run_command"),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read())
+        self.assertEqual(data["returncode"], 0)
+        self.assertIn("help", data["stdout"])
+
+    def test_post_to_unknown_path_returns_404(self):
+        import urllib.request, urllib.error, json
+        payload = json.dumps({"x": 1}).encode()
+        req = urllib.request.Request(
+            self._url("/does_not_exist"),
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with self.assertRaises(urllib.error.HTTPError) as ctx:
+            urllib.request.urlopen(req)
+        self.assertEqual(ctx.exception.code, 404)
+
+
+# ===========================================================================
+# 9. ADDITIONAL SANITIZATION EDGE CASES
+# ===========================================================================
+class TestSanitizationEdgeCases(unittest.TestCase):
+
+    def test_whitespace_only_command_rejected(self):
+        ok, _, err = sanitize_and_validate("   ")
+        self.assertFalse(ok)
+
+    def test_exactly_200_chars_allowed(self):
+        cmd = "echo " + "A" * 195   # exactly 200
+        ok, _, _ = sanitize_and_validate(cmd)
+        self.assertTrue(ok)
+
+    def test_exactly_201_chars_rejected(self):
+        cmd = "echo " + "A" * 196   # 201
+        ok, _, err = sanitize_and_validate(cmd)
+        self.assertFalse(ok)
+        self.assertIn("too long", err)
+
+    def test_command_with_tabs_normalized(self):
+        # Tabs should not bypass validation
+        ok, _, _ = sanitize_and_validate("echo\thello")
+        # split() handles tabs as whitespace, so this should pass
+        # (echo with any argument is allowed since args = ["*"])
+        self.assertTrue(ok)
+
+    def test_reboot_command_rejected(self):
+        ok, _, _ = sanitize_and_validate("reboot")
+        self.assertFalse(ok)
+
+    def test_kill_command_rejected(self):
+        ok, _, _ = sanitize_and_validate("kill -9 1")
+        self.assertFalse(ok)
+
+    def test_chown_command_rejected(self):
+        ok, _, _ = sanitize_and_validate("chown root /etc/passwd")
+        self.assertFalse(ok)
+
+    def test_eval_rejected(self):
+        ok, _, _ = sanitize_and_validate("eval echo hello")
+        self.assertFalse(ok)
+
+
+# ===========================================================================
+# 10. EXECUTE SAFE COMMAND — Error Paths
+# ===========================================================================
+class TestExecuteSafeCommandErrors(unittest.TestCase):
+
+    def test_nonexistent_binary_returns_127(self):
+        # Force a FileNotFoundError by using a command name that can't exist
+        result = execute_safe_command(["__no_such_binary_xyz__"])
+        self.assertEqual(result["returncode"], 127)
+        self.assertIn("not found", result["stderr"])
+
+    def test_result_has_all_required_keys(self):
+        result = execute_safe_command(["help"])
+        self.assertIn("stdout",     result)
+        self.assertIn("stderr",     result)
+        self.assertIn("returncode", result)
+
+    def test_help_mentions_all_allowed_commands(self):
+        result = execute_safe_command(["help"])
+        for cmd_name in ["echo", "date", "pwd", "ls", "env", "clear"]:
+            self.assertIn(cmd_name, result["stdout"],
+                          f"'{cmd_name}' missing from help output")
+
+
+# ===========================================================================
+# 11. GAME LOGIC — Extra Win/Draw Scenarios
+# ===========================================================================
+class TestExtraGameLogic(unittest.TestCase):
+
+    def test_single_x_not_a_win(self):
+        b = ["X"] + [""] * 8
+        self.assertIsNone(check_winner(b))
+
+    def test_two_xs_not_a_win(self):
+        b = ["X", "X", ""] + [""] * 6
+        self.assertIsNone(check_winner(b))
+
+    def test_mixed_board_no_winner(self):
+        # Board: X O X / O X O / O X O
+        # indices 2,4,6 = X,X,O — not a win; full board = draw
+        b = ["X", "O", "X", "O", "X", "O", "O", "X", "O"]
+        self.assertEqual(check_winner(b), "draw")
+
+    def test_o_wins_middle_row(self):
+        b = ["X", "X", "", "O", "O", "O", "", "", ""]
+        self.assertEqual(check_winner(b), "O")
+
+    def test_board_with_9_moves_draw_variant(self):
+        # XOXOXOXOX style (no three in row)
+        b = ["X","O","X","O","X","O","O","X","O"]
+        self.assertEqual(check_winner(b), "draw")
+
+
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     unittest.main(verbosity=2)

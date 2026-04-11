@@ -100,7 +100,7 @@ SAFE_ENV_VARS = [
 ]
 
 
-def sanitize_and_validate(raw_command: str):
+def sanitize_and_validate(raw_command: str) -> tuple[bool, list[str] | None, str | None]:
     """
     Validate a command against the allowlist.
     Returns (is_allowed: bool, resolved_args: list | None, error_msg: str | None).
@@ -209,20 +209,67 @@ class SecureHandler(http.server.SimpleHTTPRequestHandler):
     /run_command API endpoint with security controls.
     """
 
-    def _set_cors_headers(self) -> None:
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Referrer-Policy", "no-referrer")
+    # CSP allows Google/Firebase CDNs required by the frontend
+    _CSP = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' "
+            "https://www.googletagmanager.com "
+            "https://www.gstatic.com "
+            "https://apis.google.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "connect-src 'self' "
+            "https://*.googleapis.com "
+            "https://*.firebaseio.com "
+            "wss://*.firebaseio.com "
+            "https://www.google-analytics.com; "
+        "img-src 'self' data:; "
+        "frame-ancestors 'none';"
+    )
 
-    def do_OPTIONS(self) -> None:  # CORS preflight
+    def _set_security_headers(self) -> None:
+        """Emit hardened HTTP security headers on every response."""
+        self.send_header("Access-Control-Allow-Origin",  "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("X-Content-Type-Options",       "nosniff")
+        self.send_header("X-Frame-Options",              "DENY")
+        self.send_header("Referrer-Policy",              "strict-origin-when-cross-origin")
+        self.send_header("Content-Security-Policy",      self._CSP)
+        self.send_header("Strict-Transport-Security",    "max-age=31536000; includeSubDomains")
+        self.send_header("Permissions-Policy",           "geolocation=(), microphone=(), camera=()")    
+
+    # Keep old name as alias so callers using _set_cors_headers still work
+    _set_cors_headers = _set_security_headers
+
+    def do_OPTIONS(self) -> None:
+        """Handle CORS preflight requests safely."""
         self.send_response(204)
-        self._set_cors_headers()
+        self._set_security_headers()
         self.end_headers()
 
+    def do_GET(self) -> None:
+        """Health check endpoint + static file serving."""
+        if self.path in ("/health", "/healthz"):
+            # Cloud Run / load balancer health check
+            body = json.dumps({
+                "status":  "ok",
+                "service": "quantum-tictactoe",
+                "version": "2.0.0",
+                "port":    PORT,
+            }).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type",   "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self._set_security_headers()
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        # Delegate everything else to SimpleHTTPRequestHandler (serves static files)
+        super().do_GET()
+
     def do_POST(self) -> None:
+        """Process terminal command requests with rate limiting and secure validation."""
         if self.path != "/run_command":
             self._send_json(404, {"error": "Not Found"})
             return
@@ -262,6 +309,7 @@ class SecureHandler(http.server.SimpleHTTPRequestHandler):
         self._send_json(200, result)
 
     def _send_json(self, status: int, payload: dict) -> None:
+        """Utility to send JSON responses with appropriate headers."""
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
@@ -270,8 +318,9 @@ class SecureHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def log_message(self, fmt, *args) -> None:  # quieter stdout logs
-        _local_logger.info("%s - %s", self.client_address[0], fmt % args)
+    def log_message(self, format: str, *args) -> None:  # pylint: disable=redefined-builtin
+        """Override default logging to be quieter and route via python logging."""
+        _local_logger.info("%s - %s", self.client_address[0], format % args)
 
 
 # ---------------------------------------------------------------------------

@@ -4,11 +4,12 @@
     <!-- ===== Meta & SEO ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Quantum Tic-Tac-Toe — An immersive, chaos-driven evolution of the classic game with an embedded secure terminal emulator, deployed on Google Cloud Run.">
+    <meta name="description" content="Quantum Tic-Tac-Toe — A chaos-driven game with a global Firebase leaderboard and secure cloud terminal, solving the problem of isolated, non-engaging cloud-native learning tools.">
     <meta name="theme-color" content="#0b0c10">
     <meta property="og:title" content="Quantum Tic-Tac-Toe">
-    <meta property="og:description" content="Expect the Unexpected. Play Quantum Tic-Tac-Toe, powered by Google Cloud.">
+    <meta property="og:description" content="Expect the Unexpected. Play globally, learn cloud concepts, powered by Google Cloud Run + Firebase.">
     <meta property="og:type" content="website">
+    <meta name="robots" content="index, follow">
     <title>Quantum Tic-Tac-Toe — Expect the Unexpected</title>
 
     <!-- Google Fonts -->
@@ -16,31 +17,39 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
 
-    <!-- Google tag (gtag.js) — Google Analytics 4 -->
+    <!-- ===== Google Analytics 4 (GA4) ===== -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLACEHOLDER123"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-PLACEHOLDER123', { anonymize_ip: true });
-
-        // Custom event tracking helper
-        function trackEvent(action, category, label) {
-            gtag('event', action, { event_category: category, event_label: label });
-        }
+        gtag("js", new Date());
+        gtag("config", "G-PLACEHOLDER123", {
+            anonymize_ip: true,
+            cookie_flags: "SameSite=None;Secure",
+        });
     </script>
+
+    <!-- ===== Firebase SDK v9 (compat) — CDN ===== -->
+    <!-- Firebase App (core) — must be loaded first -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Realtime Database — global leaderboard storage -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase Analytics — user engagement tracking -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
 
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <!-- Skip Navigation (Accessibility: keyboard users jump to main content) -->
+    <!-- Skip Navigation (WCAG 2.4.1 — keyboard users skip to main content) -->
     <a href="#main-game" class="skip-link">Skip to main content</a>
 
     <div class="app-container" role="application" aria-label="Quantum Tic-Tac-Toe Application">
 
         <!-- ===== MAIN GAME SECTION ===== -->
-        <main id="main-game" class="game-section" aria-label="Tic-Tac-Toe game">
+        <main id="main-game" class="game-section" aria-label="Tic-Tac-Toe game area">
             <header class="game-header">
                 <h1 class="glow-text" id="game-title">QUANTUM TIC-TAC-TOE</h1>
                 <p class="subtitle" aria-label="Game tagline">Expect the Unexpected.</p>
@@ -51,24 +60,31 @@
                 </div>
             </header>
 
-            <!-- Google Cloud Badge -->
-            <aside class="cloud-badge" aria-label="Powered by Google Cloud">
-                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <!-- Google Cloud + Firebase Badge -->
+            <aside class="cloud-badge" aria-label="Google Cloud and Firebase powered">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="#4285F4"/>
                     <path d="M7 12a5 5 0 0 1 5-5v2a3 3 0 0 0-3 3H7z" fill="#fff"/>
                     <path d="M12 7a5 5 0 0 1 5 5h-2a3 3 0 0 0-3-3V7z" fill="#fff" opacity=".7"/>
                 </svg>
-                <span>Powered by Google Cloud Run</span>
+                <span>Google Cloud Run</span>
+                <span class="badge-sep" aria-hidden="true">+</span>
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 32 32" fill="none">
+                    <path d="M19.62 11.558l-3.203 2.98-2.972-5.995-1.372 2.52H4l6.494-11.06h.051z" fill="#FFA000"/>
+                    <path d="M13.445 8.543l2.972 5.995-9.417 9.262h16l5-9.257-7.18.037z" fill="#F57F17"/>
+                    <path d="M26.52 23.8H7.028L13.445 8.543l2.972 5.995 9.417-9.262z" fill="#FFCA28"/>
+                </svg>
+                <span>Firebase</span>
             </aside>
 
-            <!-- Score tracker -->
-            <section class="scoreboard" aria-label="Score tracker">
-                <div class="score-item" id="score-x-container">
+            <!-- Session scoreboard -->
+            <section class="scoreboard" aria-label="Session score tracker">
+                <div class="score-item">
                     <span class="score-label x-color" aria-label="Player X score">Player X</span>
                     <span class="score-value" id="score-x" aria-live="polite">0</span>
                 </div>
                 <div class="score-divider" aria-hidden="true">VS</div>
-                <div class="score-item" id="score-o-container">
+                <div class="score-item">
                     <span class="score-label o-color" aria-label="AI O score">AI (O)</span>
                     <span class="score-value" id="score-o" aria-live="polite">0</span>
                 </div>
@@ -84,74 +100,27 @@
                     aria-describedby="board-instructions">
 
                     <p id="board-instructions" class="sr-only">
-                        Use arrow keys to navigate between cells and Enter or Space to make your move.
+                        Use arrow keys to navigate cells, Enter or Space to place your mark.
                         You are Player X. The AI plays as O.
                     </p>
 
                     <!-- Row 1 -->
                     <div role="row">
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="0"
-                            tabindex="0"
-                            aria-label="Row 1, Column 1 — empty"
-                            id="cell-0"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="1"
-                            tabindex="-1"
-                            aria-label="Row 1, Column 2 — empty"
-                            id="cell-1"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="2"
-                            tabindex="-1"
-                            aria-label="Row 1, Column 3 — empty"
-                            id="cell-2"></button>
+                        <button class="cell" role="gridcell" data-index="0" tabindex="0"  aria-label="Row 1, Column 1 — empty" id="cell-0"></button>
+                        <button class="cell" role="gridcell" data-index="1" tabindex="-1" aria-label="Row 1, Column 2 — empty" id="cell-1"></button>
+                        <button class="cell" role="gridcell" data-index="2" tabindex="-1" aria-label="Row 1, Column 3 — empty" id="cell-2"></button>
                     </div>
-
                     <!-- Row 2 -->
                     <div role="row">
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="3"
-                            tabindex="-1"
-                            aria-label="Row 2, Column 1 — empty"
-                            id="cell-3"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="4"
-                            tabindex="-1"
-                            aria-label="Row 2, Column 2 — empty"
-                            id="cell-4"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="5"
-                            tabindex="-1"
-                            aria-label="Row 2, Column 3 — empty"
-                            id="cell-5"></button>
+                        <button class="cell" role="gridcell" data-index="3" tabindex="-1" aria-label="Row 2, Column 1 — empty" id="cell-3"></button>
+                        <button class="cell" role="gridcell" data-index="4" tabindex="-1" aria-label="Row 2, Column 2 — empty" id="cell-4"></button>
+                        <button class="cell" role="gridcell" data-index="5" tabindex="-1" aria-label="Row 2, Column 3 — empty" id="cell-5"></button>
                     </div>
-
                     <!-- Row 3 -->
                     <div role="row">
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="6"
-                            tabindex="-1"
-                            aria-label="Row 3, Column 1 — empty"
-                            id="cell-6"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="7"
-                            tabindex="-1"
-                            aria-label="Row 3, Column 2 — empty"
-                            id="cell-7"></button>
-                        <button class="cell"
-                            role="gridcell"
-                            data-index="8"
-                            tabindex="-1"
-                            aria-label="Row 3, Column 3 — empty"
-                            id="cell-8"></button>
+                        <button class="cell" role="gridcell" data-index="6" tabindex="-1" aria-label="Row 3, Column 1 — empty" id="cell-6"></button>
+                        <button class="cell" role="gridcell" data-index="7" tabindex="-1" aria-label="Row 3, Column 2 — empty" id="cell-7"></button>
+                        <button class="cell" role="gridcell" data-index="8" tabindex="-1" aria-label="Row 3, Column 3 — empty" id="cell-8"></button>
                     </div>
                 </div>
             </div>
@@ -164,33 +133,98 @@
                 <button id="toggle-terminal-btn" class="btn secondary-btn"
                     aria-expanded="false"
                     aria-controls="terminal-section"
-                    aria-label="Toggle the terminal emulator panel">
+                    aria-label="Toggle terminal emulator panel">
                     ⌥ CMD OVERRIDE
+                </button>
+                <button id="toggle-leaderboard-btn" class="btn leaderboard-btn"
+                    aria-expanded="false"
+                    aria-controls="leaderboard-section"
+                    aria-label="Toggle global leaderboard">
+                    ☁ LEADERBOARD
                 </button>
             </nav>
 
-            <!-- Live event log  -->
+            <!-- Live event log -->
             <section class="event-log" aria-label="Game event log">
                 <p id="event-msg" role="log" aria-live="assertive" aria-atomic="true">
                     System initialized...
                 </p>
             </section>
+
+            <!-- Firebase status indicator -->
+            <div id="firebase-status" class="firebase-status" aria-live="polite" role="status">
+                <span id="firebase-status-dot" class="status-dot connecting" aria-hidden="true"></span>
+                <span id="firebase-status-text">Connecting to Firebase…</span>
+            </div>
         </main>
+
+        <!-- ===== LEADERBOARD SECTION (Firebase Realtime Database) ===== -->
+        <aside
+            id="leaderboard-section"
+            class="leaderboard-section hidden"
+            role="complementary"
+            aria-label="Global leaderboard powered by Firebase"
+            aria-hidden="true">
+
+            <div class="leaderboard-header">
+                <h2 id="leaderboard-title">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 32 32" fill="none">
+                        <path d="M19.62 11.558l-3.203 2.98-2.972-5.995-1.372 2.52H4l6.494-11.06h.051z" fill="#FFA000"/>
+                        <path d="M13.445 8.543l2.972 5.995-9.417 9.262h16l5-9.257-7.18.037z" fill="#F57F17"/>
+                        <path d="M26.52 23.8H7.028L13.445 8.543l2.972 5.995 9.417-9.262z" fill="#FFCA28"/>
+                    </svg>
+                    Global Leaderboard — Firebase
+                </h2>
+                <button id="close-leaderboard-btn" class="close-btn" aria-label="Close leaderboard">&times;</button>
+            </div>
+
+            <div class="leaderboard-subtitle">
+                Powered by <strong>Firebase Realtime Database</strong> on Google Cloud
+            </div>
+
+            <div
+                id="leaderboard-body"
+                class="leaderboard-body"
+                role="region"
+                aria-labelledby="leaderboard-title"
+                aria-live="polite">
+                <div class="leaderboard-loading" id="leaderboard-loading">
+                    <div class="spinner" aria-label="Loading leaderboard data from Firebase"></div>
+                    <p>Fetching from Firebase…</p>
+                </div>
+                <table class="leaderboard-table hidden" id="leaderboard-table" aria-label="Top players">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Player ID</th>
+                            <th scope="col">Wins</th>
+                            <th scope="col">Games</th>
+                            <th scope="col">Win Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-rows"></tbody>
+                </table>
+                <p class="leaderboard-empty hidden" id="leaderboard-empty">
+                    No scores yet. Win a game to appear here!
+                </p>
+            </div>
+
+            <div class="leaderboard-footer">
+                <span>🔴 Live updates via Firebase Realtime Database</span>
+            </div>
+        </aside>
 
         <!-- ===== TERMINAL SECTION ===== -->
         <aside
             id="terminal-section"
             class="terminal-section hidden"
             role="complementary"
-            aria-label="Secure terminal emulator"
+            aria-label="Secure sandboxed terminal emulator"
             aria-hidden="true">
 
             <div class="terminal-header">
-                <h2 id="terminal-title">⚡ Secure Terminal — Sandbox Mode</h2>
-                <button
-                    id="close-terminal-btn"
-                    class="close-btn"
-                    aria-label="Close terminal panel">
+                <h2 id="terminal-title">⚡ Secure Terminal — Cloud Sandbox</h2>
+                <button id="close-terminal-btn" class="close-btn" aria-label="Close terminal panel">
                     &times;
                 </button>
             </div>
@@ -222,12 +256,15 @@
                     placeholder="Type a command...">
             </div>
             <p id="terminal-hint" class="sr-only">
-                Type a command and press Enter. Only safe, read-only commands are permitted.
+                Type a command and press Enter. Only safe, read-only commands are allowed.
                 Type help for the full list.
             </p>
         </aside>
+
     </div>
 
+    <!-- Load Firebase config & helpers, then game logic -->
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
